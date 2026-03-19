@@ -2,11 +2,18 @@
 
 **中文** | [English](docs/README.en.md) | [文档](https://blog.cheny.me/blog/posts/grok2api)
 
+> [!IMPORTANT]
+> 本仓库是 **基于原项目 [chenyme/grok2api](https://github.com/chenyme/grok2api) 的增强版本**，用于承载本地定制功能与接口扩展。
+>
+> - 上游项目（Upstream）：`chenyme/grok2api`
+> - 本仓库定位：增强版 / 二开维护版
+> - 已添加的增强能力之一：`/v1/admin/tokens/append` 非覆盖式 Token 追加接口
+
 > [!NOTE]
 > 本项目仅供学习与研究，使用者必须在遵循 Grok 的 **使用条款** 以及 **法律法规** 的情况下使用，不得用于非法用途。
 
 > [!NOTE]
-> 开源项目欢迎大家支持二开和PR，但请保留原作者标识和前端标识，尊重他人劳动成果～！
+> 感谢原作者与贡献者的工作。本增强版本会持续保留上游来源信息，并在此基础上进行功能扩展与维护。
 
 基于 **FastAPI** 重构的 Grok2API，全面适配最新 Web 调用格式，支持流/非流式对话、工具调用、图像生成/编辑、视频生成/超分（文生视频 / 图生视频）、深度思考，号池并发与自动负载均衡一体化。
 
