@@ -7,7 +7,25 @@
 >
 > - 上游项目（Upstream）：`chenyme/grok2api`
 > - 本仓库定位：增强版 / 二开维护版
-> - 已添加的增强能力之一：`/v1/admin/tokens/append` 非覆盖式 Token 追加接口
+> - 增强版仓库：`StardustWhisper/Grok2API`
+
+## 🚀 增强版新增能力
+
+本仓库相对上游，当前至少包含以下增强：
+
+- **新增非覆盖式 Token 追加接口**：`POST /v1/admin/tokens/append`
+  - 适合外部客户端增量推送 token
+  - 不会像 `/v1/admin/tokens` 那样整体覆盖整个 token 池
+- **增强版维护说明**：新增 `ENHANCEMENTS.md`
+  - 记录增强内容、维护规则、部署注意事项、上游同步方式
+- **仓库维护结构已明确**
+  - `origin`：增强版仓库
+  - `upstream`：原项目仓库
+
+> [!NOTE]
+> 如果你是第一次接触本项目，建议优先阅读：
+> - `README.md`
+> - `ENHANCEMENTS.md`
 
 > [!NOTE]
 > 本项目仅供学习与研究，使用者必须在遵循 Grok 的 **使用条款** 以及 **法律法规** 的情况下使用，不得用于非法用途。
@@ -35,9 +53,9 @@ uv run granian --interface asgi --host 0.0.0.0 --port 8000 --workers 1 main:app
 ### Docker Compose
 
 ```bash
-git clone https://github.com/chenyme/grok2api
+git clone https://github.com/StardustWhisper/Grok2API.git
 
-cd grok2api
+cd Grok2API
 
 docker compose up -d
 ```
