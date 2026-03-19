@@ -105,6 +105,33 @@ curl -X POST 'http://HOST:PORT/v1/admin/tokens/append' \
 ## 快速开始
 > [文档](https://blog.cheny.me/blog/posts/grok2api)
 
+## 同步上游更新
+
+如果你在维护这个增强版仓库，推荐保留如下 Git 关系：
+
+- `origin` → `StardustWhisper/Grok2API`
+- `upstream` → `chenyme/grok2api`
+
+典型同步流程：
+
+```bash
+cd Grok2API
+git fetch upstream
+git checkout main
+git merge upstream/main
+# 解决冲突后
+# git push origin main
+```
+
+建议做法：
+- 先同步上游，再重新检查增强点是否需要调整
+- 对增强版特有能力（如 `/v1/admin/tokens/append`）做一次最小回归测试
+- 如需更新部署，执行：
+
+```bash
+docker compose up -d --build
+```
+
 ### 本地开发
 
 ```bash

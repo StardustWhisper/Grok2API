@@ -784,27 +784,57 @@ async function submitImport() {
   const lines = text.split('\n');
   const defaultQuota = getDefaultQuotaForPool(pool);
 
+  const tokens = [];
+  const seen = new Set();
+
   lines.forEach(line => {
     const t = line.trim();
-    if (t && !flatTokens.some(ft => ft.token === t)) {
-      flatTokens.push({
-        token: t,
-        pool: pool,
-        status: 'active',
-        quota: defaultQuota,
-        consumed: 0,
-        note: '',
-        tags: [],
-        fail_count: 0,
-        use_count: 0,
-        _selected: false
-      });
-    }
+    if (!t) return;
+    if (seen.has(t)) return;
+    seen.add(t);
+    if (flatTokens.some(ft => ft.token === t)) return;
+    tokens.push({
+      token: t,
+      status: 'active',
+      quota: defaultQuota,
+      consumed: 0,
+      note: '',
+      tags: [],
+      fail_count: 0,
+      use_count: 0
+    });
   });
 
-  await syncToServer();
-  closeImportModal();
-  loadData();
+  if (tokens.length === 0) {
+    showToast(t('token.tokenExists') || t('common.noData') || 'No new tokens to import', 'info');
+    closeImportModal();
+    return;
+  }
+
+  try {
+    const res = await fetch('/v1/admin/tokens/append', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...buildAuthHeaders(apiKey)
+      },
+      body: JSON.stringify({
+        pool,
+        tokens
+      })
+    });
+
+    const data = await readJsonResponse(res);
+    if (!res.ok) {
+      throw new Error((data && (data.detail || data.message)) || `HTTP ${res.status}`);
+    }
+
+    closeImportModal();
+    await loadData();
+    showToast(t('token.importSuccess') || `Imported ${tokens.length} token(s)`, 'success');
+  } catch (e) {
+    showToast(t('common.saveError', { msg: e.message }), 'error');
+  }
 }
 
 // Export Logic
