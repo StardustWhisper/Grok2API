@@ -101,7 +101,38 @@ cd /home/ubuntu/.openclaw/workspace/services/Grok2API-enhanced
 sudo docker compose up -d --build
 ```
 
-### 3. API 语义分工
+### 3. Warp 代理保留策略
+当前增强版部署中，已确认生效配置包含：
+```toml
+[proxy]
+base_proxy_url = "socks5://warp:1080"
+```
+
+这表示：
+- Grok2API 默认通过 `warp` 容器提供的 SOCKS5 代理出网
+- Warp 当前不是单纯待命，而是实际参与请求链路
+
+背景说明：
+- Warp 最初是在一次 Grok2API 问题排查中部署的
+- 当时最终发现根因是 token，而不是网络
+- 但考虑到当前运行环境是 VPS / 机房 IP，保留 Warp 仍然有现实意义：
+  - 机房 IP 直连上游服务更容易遇到风控、地区、线路质量、成功率波动等问题
+  - Warp 可以作为默认的防御性网络出口层
+
+当前维护结论：
+- **默认先保留 Warp**
+- 在没有明确证据证明“直连同样稳定甚至更稳”之前，不建议贸然移除
+
+如果未来需要下线 Warp，必须按以下顺序操作：
+1. 先移除配置中的 `base_proxy_url = "socks5://warp:1080"`
+2. 做直连回归测试（chat / image / video / append 等）
+3. 确认稳定后，再停掉 `warp` 容器
+
+⚠️ 注意：
+- 不能只停掉容器、不改配置
+- 否则 Grok2API 仍会尝试连接 `socks5://warp:1080`，导致请求失败
+
+### 4. API 语义分工
 建议保持清晰分层：
 - `/v1/admin/tokens` = 全量覆盖/整体同步
 - `/v1/admin/tokens/append` = 非覆盖式增量追加
