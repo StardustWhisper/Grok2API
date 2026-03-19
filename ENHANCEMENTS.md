@@ -1,0 +1,152 @@
+# ENHANCEMENTS.md
+
+本文件记录 **Grok2API 增强版** 相比上游 `chenyme/grok2api` 的定制内容、维护约定和后续注意事项。
+
+## 项目定位
+
+本仓库是：
+- **基于上游 `chenyme/grok2api` 的增强版本**
+- 用于承载本地定制功能、接口扩展与持续维护
+
+推荐 Git 关系：
+- `origin` → 本增强版仓库
+- `upstream` → `https://github.com/chenyme/grok2api`
+
+推荐维护目录：
+- `/home/ubuntu/.openclaw/workspace/services/Grok2API-enhanced`
+
+## 已完成增强
+
+### 1. 非覆盖式 Token 追加接口
+新增接口：
+- `POST /v1/admin/tokens/append`
+
+目的：
+- 让外部客户端可以 **增量推送 token**
+- 避免原生 `/v1/admin/tokens` 的全量覆盖语义
+
+接口语义：
+- 只追加/更新，不覆盖其他 pool
+- 已存在 token：按同 token merge 更新
+- 不存在 token：追加
+
+支持的请求形式：
+
+#### 指定 pool
+```json
+{"pool":"default","token":"xxx"}
+```
+
+或
+
+```json
+{"pool":"default","tokens":[{"token":"xxx"}]}
+```
+
+#### 多 pool 批量
+```json
+{
+  "default": [{"token":"a"}],
+  "backup": [{"token":"b"}]
+}
+```
+
+鉴权方式：
+- 走后台 `app_key` 的 **Bearer 鉴权**
+- 不是 query 参数 `?app_key=...`
+
+示例：
+```bash
+curl -X POST 'http://HOST:PORT/v1/admin/tokens/append' \
+  -H 'Authorization: Bearer <APP_KEY>' \
+  -H 'Content-Type: application/json' \
+  -d '{"pool":"default","token":"your_token_here"}'
+```
+
+## 关键认知
+
+### 管理界面的“导入”不是后端原生 append
+原项目管理界面里的 token 导入，在体验上像 append，但实现方式是：
+1. 前端先 `GET /v1/admin/tokens`
+2. 浏览器本地 merge 新 token
+3. 再整体 `POST /v1/admin/tokens`
+
+也就是说：
+- **UI 层是 append 体验**
+- **API 层原本是全量覆盖保存**
+
+因此：
+- 管理后台人工操作问题不大
+- 但外部客户端集成时，需要真正的 append API
+
+## 部署维护规则
+
+### 1. 本地改代码必须使用本地 build
+如果 `docker-compose.yml` 使用的是：
+```yaml
+image: ghcr.io/chenyme/grok2api:latest
+```
+那么本地源码改动不会进入容器。
+
+为了让本地增强版代码生效，必须使用：
+```yaml
+build:
+  context: .
+image: grok2api-chenyme-local:latest
+```
+
+### 2. 修改后推荐重建方式
+```bash
+cd /home/ubuntu/.openclaw/workspace/services/Grok2API-enhanced
+sudo docker compose up -d --build
+```
+
+### 3. API 语义分工
+建议保持清晰分层：
+- `/v1/admin/tokens` = 全量覆盖/整体同步
+- `/v1/admin/tokens/append` = 非覆盖式增量追加
+
+适用场景：
+- 管理面板整体编辑：`/v1/admin/tokens`
+- 外部客户端推 token：`/v1/admin/tokens/append`
+
+## Git 维护规则
+
+### 推荐同步上游流程
+```bash
+cd /home/ubuntu/.openclaw/workspace/services/Grok2API-enhanced
+git fetch upstream
+git checkout main
+git merge upstream/main
+# 解决冲突后
+# git push origin main
+```
+
+### 重要经验：新仓库首推要从干净完整 clone 开始
+曾经尝试从旧工作目录直接首推到新空仓库，遇到：
+- `remote unpack failed: index-pack failed`
+- `did not receive expected object ...`
+
+最终验证：
+- 不是 GitHub 权限问题
+- 最稳的方案是：
+  1. 从上游重新完整 clone
+  2. 在干净 clone 上补增强
+  3. 再推到新仓库
+
+所以以后如果要新建增强版仓库，优先按这个流程做，不要直接拿历史状态不明的工作目录首推。
+
+## 后续建议
+
+可以继续做的增强：
+1. 把管理界面的“导入”按钮直接改成走 `/v1/admin/tokens/append`
+2. 增加追加后自动刷新状态的接口，例如：`append-and-refresh`
+3. 增加 `CHANGELOG.md`，记录增强版相对上游的变化
+4. 明确部署时统一使用哪个目录，避免多个目录长期漂移
+
+## 维护原则
+
+- 尊重并保留上游来源信息
+- 优先保持与上游可同步
+- 本地增强尽量做成清晰、最小、可维护的增量修改
+- 新增接口时，尽量明确区分“覆盖式”与“增量式”语义，避免误用

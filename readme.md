@@ -477,8 +477,4 @@ curl http://localhost:8000/v1/videos \
 |  | `batch_size` | 批次大小 | 批量刷新用量的单批处理数量。 | `50` |
 |  | `timeout` | 请求超时 | 用量查询接口的超时时间（秒）。 | `60` |
 
-<br>
 
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=Chenyme/grok2api&type=Timeline)](https://star-history.com/#Chenyme/grok2api&Timeline)
